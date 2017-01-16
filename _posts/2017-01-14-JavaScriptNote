@@ -188,30 +188,103 @@ JavaScript的函数其实都指向某个变量。既然变量可以指向函数�
 function add(x, y, f) {
     return f(x) + f(y);
 }
-####map/redux
+####map/reduce
+数组乘积
+<pre>
+function product(arr) {
+    return arr.reduce(function(x,y){
+        return x*y;
+    });
+}
+
+//分割
+return s.split('').map(function(x){return x-0}).reduce(function(a,b){return a*10+b});
+return s.split('').map(function(x){return "0123456789".indexOf(x)}).reduce(function(a,b){return a*10+b});
+
+//字符串变换
+return arr.map(function(str){return str.toUpperCase()[0]+str.toLowerCase().substring(1)})
+
+//函数入参
+r = arr.map(function myparseInt(i){return parseInt(i)});
+</pre>
 
 
 ####filter
-####sort
+filter也是一个常用的操作，它用于把Array的某些元素过滤掉，然后返回剩下的元素。
 
+去除重复元素
+r = arr.filter(function (element, index, self) {
+    return self.indexOf(element) === index;
+});
+去除重复元素依靠的是indexOf总是返回第一个元素的位置，后续的重复元素位置与indexOf返回的位置不相等，因此被filter滤掉了。
+
+素数
+return arr.filter(function(e){
+  if(e===2) return true;
+  else if(e>2){
+   if(e%2===0) return false;
+   for(var t=3;t<=Math.sqrt(e);t+=2){
+     if(e%t===0) return false;
+   }
+  return true;
+  }  
+  return false;  
+  });
+
+####sort
+<pre>
+var arr = ['Google', 'apple', 'Microsoft'];
+arr.sort(function (s1, s2) {
+    x1 = s1.toUpperCase();
+    x2 = s2.toUpperCase();
+    if (x1 < x2) {
+        return -1;
+    }
+    if (x1 > x2) {
+        return 1;
+    }
+    return 0;
+}); // ['apple', 'Google', 'Microsoft']
+</pre>
+sort()方法会直接对Array进行修改，它返回的结果仍是当前Array。
+
+从上述例子可以看出，高阶函数的抽象能力是非常强大的，而且，核心代码可以保持得非常简洁。
 
 ###闭包
+Todo 函数作用域。。。
 
 
 ###箭头函数
+ES6标准新增了一种新的函数：Arrow Function（箭头函数）。
+<pre>
+<code>
+x => x * x
+
+function (x) {
+    return x * x;
+}
+</code>
+</pre>
+
+箭头函数看上去是匿名函数的一种简写，但实际上，箭头函数和匿名函数有个明显的区别：箭头函数内部的this是词法作用域，由上下文确定。
 
 
-###generator
+#??###generator
+generator（生成器）是ES6标准引入的新的数据类型。一个generator看上去像一个函数，但可以返回多次。
 
 
 
-##3、标准对象
-Data
-RegExp
-JSON
+??##3、标准对象
+typeof查看。
+number、string、boolean、function和undefined有别于其他类型。
+特别注意null的类型是object，Array的类型也是object，如果我们用typeof将无法区分出null、Array和通常意义上的object——{}。
+
+###Data
+###RegExp
+###JSON
 
 
-##4、面向对象编程
+??##4、面向对象编程
 
 ##5、浏览器
 ###浏览器对象
