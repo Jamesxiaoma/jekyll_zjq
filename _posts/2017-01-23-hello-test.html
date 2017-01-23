@@ -1,1 +1,219 @@
-test
+<!DOCTYPE html>
+<html lang="ch">
+
+<head>
+    <title>test2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet">
+    <script src="jquery-3.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+  <style>
+  ul {
+    width: 128px;
+}
+.svg-canvas {
+    height: 768px;
+    /*width: 768px;*/
+    border: 1px solid #000;
+}
+
+svg {
+    display: block;
+}
+
+#dropCanvas * {
+    overflow: auto;
+}
+
+ul li {
+    list-style-type: none;
+}
+
+.wrapper {
+    height: 100%;
+}
+
+.description {
+    float: left;
+}
+
+.description.page-create-ttpl-drags {
+    width: 200px;
+    background: #dfe3e9;
+}
+
+.page-create-select-wrapper {
+    padding: 5px;
+    height: 100%;
+}
+
+.description.page-create-ttpl-config {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 250px;
+    background: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.topology-template-preview {
+    margin-left: 215px;
+    margin-right: 265px;
+    background: #fff;
+}
+
+.ttpl-preview-editor {
+    position: relative;
+}
+
+ul.drags-svg li {
+    width: 110px;
+    display: inline-block;
+}
+
+.ttpl-create-toolbar,
+.page-detail-ttpl .topology-template-preview .ttpl-preview-wrapper .ttpl-preview .ttpl-preview-canvas .ttpl-create-toolbar,
+.select-recommend-preview .topology-template-preview .ttpl-preview-wrapper .ttpl-preview .ttpl-preview-canvas .ttpl-create-toolbar {
+    position: absolute;
+    z-index: 20;
+    top: 10px;
+    padding: 10px 20px 0;
+    line-height: normal;
+    text-align: left;
+}
+
+.topology-template-preview .common-graph {
+    min-height: 400px;
+    position: relative;
+}
+
+li.network-li {
+    display: inline-block;
+    width: 70px;
+}
+
+div.networkIcon {
+    display: inline-block;
+}
+
+li#network.network-color-0 svg path {
+    fill: #10ae92;
+}
+
+li#network.network-color-1 svg path {
+    fill: #3c7afe;
+}
+
+li#network.network-color-2 svg path {
+    fill: #eb6b4e;
+}
+
+li#network.network-color-3 svg path {
+    fill: #f9ca5e;
+}
+
+li#network.network-color-4 svg path {
+    fill: #900781;
+}
+  </style>
+</head>
+
+<body>
+    <div class="ttpl-preview-editor">
+        <div class="description page-create-ttpl-drags" style="height: 760px;">
+            <div class="page-create-select-wrapper">
+                <h2>设备</h2>
+                <ul>
+                    <li draggable="true" id="instance">
+                        <svg id="instanceIcon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M42 4H6C3.79 4 2 5.79 2 8v24c0 2.21 1.79 4 4 4h14v4h-4v4h16v-4h-4v-4h14c2.21 0 4-1.79 4-4V8c0-2.21-1.79-4-4-4zm0 28H6V8h36v24z" />
+                            <text x=56 y=28>主机</text>
+                        </svg>
+                    </li>
+                    <li draggable="true" id="volume">
+                        <svg id="volumeIcon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M42 6H6c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h36c2.21 0 4-1.79 4-4V10c0-2.21-1.79-4-4-4zm0 32H6V10h20v8h16v20z" />
+                            <text x=56 y=28>硬盘</text>
+                        </svg>
+                    </li>
+                    <li draggable="true" id="test1">
+                        <svg id="test1Icon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M24 32.5l8-8h-6v-18h-4v18h-6l8 8zm18-26H30v3.97h12v28.06H6V10.47h12V6.5H6c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h36c2.21 0 4-1.79 4-4v-28c0-2.21-1.79-4-4-4z" />
+                            <text x=56 y=28>test1</text>
+                        </svg>
+                    </li>
+                    </li>
+                </ul>
+                <hr/>
+                <h2>网络</h2>
+                <ul>
+                    <li draggable="true" id="network-1">
+                        <svg id="net-1Icon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M13.98 22L6 30l7.98 8v-6H28v-4H13.98v-6zM42 18l-7.98-8v6H20v4h14.02v6L42 18z" />
+                            <text x=56 y=28>网络1</text>
+                        </svg>
+                    </li>
+                    <li draggable="true" id="network-2">
+                        <svg id="net-1Icon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M13.98 22L6 30l7.98 8v-6H28v-4H13.98v-6zM42 18l-7.98-8v6H20v4h14.02v6L42 18z" />
+                            <text x=56 y=28>网络2</text>
+                        </svg>
+                    </li>
+                    <li draggable="true" id="network-3">
+                        <svg id="net-1Icon" version="1.1" baseProfile="full" width="156" height="48" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M13.98 22L6 30l7.98 8v-6H28v-4H13.98v-6zM42 18l-7.98-8v6H20v4h14.02v6L42 18z" />
+                            <text x=56 y=28>网络3</text>
+                        </svg>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="description page-create-ttpl-config" style="height: 760px;">
+            <div class="wrapper">
+                <h3>资源配置</h3>
+                <hr/>
+                <div class="text-ttlp-config" ng-show="vm.devices.length">
+                    <p>名称:test</p>
+                    <p>描述:无</p>
+                    <p>内存 1G</p>
+                    <p>用户名 root</p>
+                </div>
+                <p>test</p>
+                <h3>网络配置</h3>
+                <hr/>
+                <br>
+                <!--<div ng-repeat="network in vm.networks" class="networkIcon">
+                    <li draggable="true" title="{{ network.name }}" class="network-li network-color-{{ $index%5 }}" id="network">
+                        <svg id="networkIcon" version="1.1" baseProfile="full" width="40" height="32" xmlns="http://www.w3.org/2000/svg" fill="#000">
+                            <path d="M4,24c0,11.05,8.95,20,20,20s20-8.95,20-20S35.05,4,24,4S4,12.95,4,24z M18,35l-7-7l7-7v5h8v4h-8V35z M30,13l7,7l-7,7v-5h-8 v-4h8V13z" />
+                            <text x=2 y=10>{{ network.name }}</text>
+                        </svg>
+                    </li>
+                </div>-->
+            </div>
+        </div>
+        <div class="topology-template-preview">
+            <div class="svg-canvas" id="dropEle" draggable="false">
+                <svg id="dropCanvas" version="1.1" baseProfile="full" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" draggable="false">
+                    <defs>
+                        <pattern id="pattern" x="0" y="0" width="9" height="9" patternUnits="userSpaceOnUse">
+                            <path d="m 9 0 l 0 9 l -9 0" stroke="#ddd" stroke-width="1px" fill="none">
+                        </pattern>
+                    </defs>
+                    <rect x=0 y=0 width="100%" height="100%" fill="url(#pattern)" />
+                    <svg id="dropCanvasAll" x=0 y=0 version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <svg id="dropCanvasRight" width="1920" x=0 y=0 version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        </svg>
+                        <svg id="dropCanvasLeft" width="1920" x=0 y=0 version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        </svg>
+                    </svg>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="CC-test3.js"></script>
+</body>
+
+</html>
+
