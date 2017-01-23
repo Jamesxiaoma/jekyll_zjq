@@ -212,7 +212,331 @@ li#network.network-color-4 svg path {
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="CC-test3.js"></script>
+    <script >
+    //构造函数，构造Device类，即所有设备的构造函数
+function Device(type, dropSwitch, foresideType, id, name, objHeight) {
+    this.type = type; //设备类型
+    this.dropSwitch = dropSwitch; //设备是否可放置状态的开关
+    this.foresideType = foresideType || [""]; //设备可以放在哪些设备后
+    this.id = id; //设备ID，不可变，唯一
+    this.name = name; //设备名，可变
+    this.foresideObjId = ""; //当前设备的上层设备的ID
+    
+    this.objHeight = objHeight || 1; //设备占高
+    this.childDevices = []; //子设备
+    this.objRelativelyHeight = 0; //设备相对高度
+    this.objColumn = 0;
+    this.leanRight = true;
+}
+
+var provisionalDeviceObj; //临时设备对象，用作事件间的信息传递
+
+
+var devicesRight = { //设备象数组右
+    "id": "devicesRight",
+    "objHeight": 0,
+    "childDevices": [],
+    "objRelativelyHeight": 0,
+    "objColumn": 0
+};
+
+var devicesLeft = { //设备象数组左
+    "id": "devicesLeft",
+    "objHeight": 0,
+    "childDevices": [],
+    "objRelativelyHeight": 0,
+    "objColumn": 0
+};
+
+var devices = { //设备象数组
+    "id": "devices",
+    "objHeight": 0,
+    "childDevices": [devicesRight, devicesLeft],
+    "objRelativelyHeight": 0,
+    "objColumn": 0
+};
+
+
+var instanceCount = 0;
+var volumeCount = 0;
+var test1Count = 0;
+
+
+document.ondragstart = function (event) { //监听整个DOM上的拖拽开始事件dragstart
+    var type = event.target.id; //获取事件发生元素的ID，ID是设备类型，即type
+    provisionalDeviceObj = creatDevice(type); //创建当前type类型的对象，并由provisionalDeviceObj保存
+    event.dataTransfer.setData("Text", provisionalDeviceObj.id); //事件传递信息设为provisionalDeviceObj.id
+}
+
+$("#dropEle")[0].ondragover = function (event) { //设置画布"#dropEle"允许放置，阻止对元素的默认处理方式
+    event.preventDefault();
+}
+
+$("#dropEle")[0].ondrop = function (event) { //监听画布"#dropEle"的ondrop放置事件，阻止对元素的默认处理方式（打开链接）
+    event.preventDefault();
+    if (provisionalDeviceObj.dropSwitch === true) { //如果临时对象的dropSwitch属性为真
+        switch (provisionalDeviceObj.type) {
+            case "instance":
+                instanceCount++;
+                provisionalDeviceObj.id = "instances" + instanceCount;
+                provisionalDeviceObj.name = "新建主机" + instanceCount;
+                break;
+            case "volume":
+                volumeCount++;
+                provisionalDeviceObj.id = "volume" + volumeCount;
+                provisionalDeviceObj.name = "新建硬盘" + volumeCount;
+                break;
+            case "test1":
+                test1Count++;
+                provisionalDeviceObj.id = "test1" + test1Count;
+                provisionalDeviceObj.name = "test1" + test1Count;
+                break;
+        }
+
+
+        if ($(event.target).parent()[0].id === "dropCanvas") {
+            if (provisionalDeviceObj.leanRight) {
+                provisionalDeviceObj.foresideObjId = "devicesRight"; //设置其设备的上层设备的ID
+            } else {
+                provisionalDeviceObj.foresideObjId = "devicesLeft"; //设置其设备的上层设备的ID
+            }
+        } else {
+            provisionalDeviceObj.foresideObjId = $(event.target).parent()[0].id; //设置其设备的上层设备的ID
+        }
+
+
+        //********对网络对象的特殊处理********//
+        var testNetType = /^network-/;
+        if (testNetType.test(provisionalDeviceObj.id)) {
+            provisionalDeviceObj.foresideObjId = "devicesLeft";
+            provisionalDeviceObj.inDomain[0] = $(event.target).parent()[0].id;
+        }
+        //********对网络对象的特殊处理********//
+
+
+        if ($($(event.target).parent()[0]).attr("objColumn")) {
+            provisionalDeviceObj.objColumn = parseInt($($(event.target).parent()[0]).attr("objColumn")) + 1;
+        } else {
+            provisionalDeviceObj.objColumn = 1;
+        }
+
+        if (provisionalDeviceObj.type === "net-1") {
+            provisionalDeviceObj.objColumn = 1;
+        }
+
+        pushObject(devices, provisionalDeviceObj);
+
+        setObjHeight(devices);
+
+        $("#dropCanvasRight svg,#dropCanvasLeft svg,.objLine").remove();
+        draw(devices);
+        linkObj(devices);
+        setDropDeviceObject(); //对画布上的所有元素绑定事件
+
+    } else { //如果临时对象的dropSwitch属性为假，则弹出警告
+        alert("请将设备放置在正确位置.");
+    }
+    console.log(devices);
+    console.log("*******************************************************")
+}
+
+
+function pushObject(rootObj, obj) {
+    for (var i = 0; i < rootObj.childDevices.length; i++) {
+        if (rootObj.childDevices[i].id === obj.id) {
+            obj.foresideObjId = null;
+            //********对网络对象的特殊处理********//
+            if (obj.inDomain) {
+                if (rootObj.childDevices[i].inDomain.indexOf(obj.inDomain[0]) === -1) {
+                    rootObj.childDevices[i].inDomain.push(obj.inDomain[0]);
+                }
+            }
+            //********对网络对象的特殊处理********//
+        } else {
+            pushObject(rootObj.childDevices[i], obj);
+            if (rootObj.childDevices[i].id === obj.foresideObjId) {
+                rootObj.childDevices[i].childDevices.push(obj);
+            }
+            if (rootObj.childDevices[i].childDevices.length) {
+                rootObj.childDevices[i].objHeight = 0;
+            }
+        }
+    }
+}
+
+function creatDevice(type) { //创建特定type类型的对象
+    var typeObj;
+    switch (type) {
+        case "instance":
+            typeObj = new Device("instance", true);
+            break;
+        case "volume":
+            typeObj = new Device("volume", false, ["instance"]);
+            break;
+        case "test1":
+            typeObj = new Device("test1", false, ["volume", "instance",'network']);
+            break;
+        // case "net-1":
+        //     typeObj = new Device("net-1", false, ["instance"], "net-1", "网络1");
+        //     typeObj.leanRight = false;
+        //     typeObj.inDomain = [];
+        //     break;
+    }
+
+    if (type.indexOf('network-') === 0) {
+        // type, dropSwitch, foresideType, id, name, objHeight
+        typeObj = new Device("network", false, ["instance"], type);
+        typeObj.leanRight = false;
+        typeObj.inDomain = [];
+    }
+
+
+    return typeObj;
+};
+
+
+function setDropDeviceObject() { //将所有画布上的元素绑定事件
+    $("#dropCanvas svg").on("dragover", function (event) {
+        event.preventDefault();
+        if ($.inArray($(event.target).parent().attr('class'), provisionalDeviceObj.foresideType) != -1) {
+            $(event.target).parent().attr('fill', '#1d83f6');
+            provisionalDeviceObj.dropSwitch = true;
+        }
+    });
+    $("#dropCanvas svg").on("dragleave", function (event) {
+        event.preventDefault();
+        $(event.target).parent().attr('fill', '#000');
+        provisionalDeviceObj.dropSwitch = false;
+    });
+}
+
+function draw(obj) {
+
+    drawRight(obj.childDevices[0]);
+    drawLeft(obj.childDevices[1]);
+
+    function drawRight(rightObj) {
+        console.log(rightObj.id + " : " + rightObj.objHeight);
+        for (var i = 0; i < rightObj.childDevices.length; i++) {
+
+            rightObj.childDevices[i].objRelativelyHeight = ((rightObj.childDevices.length > 1) ? 
+                ((i > 0) ? rightObj.childDevices[i].objRelativelyHeight * 0.5 + rightObj.childDevices[i - 1].objRelativelyHeight + rightObj.childDevices[i - 1].objHeight * 0.5 :
+                 rightObj.objRelativelyHeight + rightObj.childDevices[i].objRelativelyHeight * 0.5 - rightObj.objHeight * 0.5) 
+                : rightObj.objRelativelyHeight);
+
+            var dropDeviceObject = $("#" + rightObj.childDevices[i].type + " svg").clone();
+            dropDeviceObject.attr({
+                id: rightObj.childDevices[i].id,
+                class: rightObj.childDevices[i].type,
+                objColumn: rightObj.childDevices[i].objColumn,
+                x: 256 * rightObj.childDevices[i].objColumn,
+                y: 48 * (rightObj.childDevices[i].objRelativelyHeight) + 384
+            });
+            $("#dropCanvasRight").append(dropDeviceObject);
+            $("#" + rightObj.childDevices[i].id + " text").html(rightObj.childDevices[i].name);
+
+            drawRight(rightObj.childDevices[i]);
+        }
+    }
+
+    function drawLeft(leftObj) {
+        console.log(leftObj.id + " : " + leftObj.objHeight);
+        for (var i = 0; i < leftObj.childDevices.length; i++) {
+
+            leftObj.childDevices[i].objRelativelyHeight = ((leftObj.childDevices.length > 1) ? ((i > 0) ? leftObj.childDevices[i].objRelativelyHeight * 0.5 + leftObj.childDevices[i - 1].objRelativelyHeight + leftObj.childDevices[i - 1].objHeight * 0.5 : leftObj.objRelativelyHeight + leftObj.childDevices[i].objRelativelyHeight * 0.5 - leftObj.objHeight * 0.5) : leftObj.objRelativelyHeight);
+
+            var dropDeviceObject = $("#" + leftObj.childDevices[i].type + " svg").clone();
+            dropDeviceObject.attr({
+                id: leftObj.childDevices[i].id,
+                class: leftObj.childDevices[i].type,
+                objColumn: leftObj.childDevices[i].objColumn,
+                x: -256 * leftObj.childDevices[i].objColumn + 128,
+                y: 48 * (leftObj.childDevices[i].objRelativelyHeight) + 384
+            });
+            $("#dropCanvasLeft").append(dropDeviceObject);
+            $("#" + leftObj.childDevices[i].id + " text").html(leftObj.childDevices[i].name);
+            drawLeft(leftObj.childDevices[i]);
+        }
+    }
+}
+
+
+function setObjHeight(obj) {
+
+    setRightObjHeight(obj.childDevices[0]);
+    setLeftObjHeight(obj.childDevices[1]);
+
+    function setRightObjHeight(rightobj) {
+        for (var i = 0; i < rightobj.childDevices.length; i++) {
+            setRightObjHeight(rightobj.childDevices[i]);
+            rightobj.objHeight = rightobj.objHeight + rightobj.childDevices[i].objHeight;
+            rightobj.childDevices[i].objRelativelyHeight = rightobj.childDevices[i].objHeight;
+        }
+    }
+
+    function setLeftObjHeight(leftobj) {
+        for (var i = 0; i < leftobj.childDevices.length; i++) {
+            setLeftObjHeight(leftobj.childDevices[i]);
+            leftobj.objHeight = leftobj.objHeight + leftobj.childDevices[i].objHeight;
+            leftobj.childDevices[i].objRelativelyHeight = leftobj.childDevices[i].objHeight;
+        }
+    }
+}
+
+function linkObj(obj) {
+    linkRightObj(obj.childDevices[0]);
+    linkLeftObj(obj.childDevices[1]);
+
+    function linkRightObj(rightobj) {
+        for (var i = 0; i < rightobj.childDevices.length; i++) {
+            linkRightObj(rightobj.childDevices[i]);
+            var x1 = 256 * rightobj.childDevices[i].objColumn - 128;
+            var y1 = 48 * (rightobj.childDevices[i].objRelativelyHeight) + 384;
+
+            var y2 = 48 + ((rightobj.childDevices[i].objHeight > 1) ? (rightobj.childDevices[i].objHeight - 1) * 24 : 0);
+            var y3 = -24 - ((rightobj.childDevices[i].objHeight > 1) ? (rightobj.childDevices[i].objHeight - 1) * 24 : 0);
+
+
+            document.getElementById("dropCanvasAll").insertAdjacentHTML("beforeend", "<path class='objLine' d =' M " + x1 + " " + y1 + "  v " + y2 + " m 0 " + y3 + " h 128' stroke = 'black' fill='transparent'/>");
+        }
+    }
+
+    function linkLeftObj(leftobj) {
+        for (var i = 0; i < leftobj.childDevices.length; i++) {
+            linkLeftObj(leftobj.childDevices[i]);
+            var x1 = -256 * leftobj.childDevices[i].objColumn + 256 + 128;
+            var y1 = 48 * (leftobj.childDevices[i].objRelativelyHeight) + 384;
+
+            var y2 = 48 + ((leftobj.childDevices[i].objHeight > 1) ? (leftobj.childDevices[i].objHeight - 1) * 24 : 0);
+            var y3 = -24 - ((leftobj.childDevices[i].objHeight > 1) ? (leftobj.childDevices[i].objHeight - 1) * 24 : 0);
+
+            document.getElementById("dropCanvasAll").insertAdjacentHTML("beforeend", "<path class='objLine' d =' M " + x1 + " " + y1 + "  v " + y2 + " m 0 " + y3 + " h -128' stroke = 'black' fill='transparent'/>");
+        }
+    }
+
+}
+
+
+dragable();
+
+function dragable() {
+    var x, y;
+    var $dragSVG = $("#dropCanvasAll");
+    $('#dropCanvas').on("mousedown", function (event) {
+        x = event.clientX - $dragSVG.attr("x");
+        y = event.clientY - $dragSVG.attr("y");
+        $(document).on("mousemove", function (event) {
+            $dragSVG.attr("x", event.clientX - x);
+            $dragSVG.attr("y", event.clientY - y);
+        });
+    });
+    $(document).on("mouseup", function (event) {
+        $(document).off("mousemove");
+    });
+}
+    
+    
+    </script>
 </body>
 
 </html>
